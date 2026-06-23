@@ -18,6 +18,8 @@ export default function GoogleLogin({ onLogin, userEmail = "akaezechielwinner@gm
   const [introSlide, setIntroSlide] = useState<number>(0);
   const [step, setStep] = useState<'welcome' | 'loading'>('welcome');
   const [authError, setAuthError] = useState<string>('');
+  const [customEmail, setCustomEmail] = useState<string>(userEmail);
+  const [customName, setCustomName] = useState<string>('');
 
   const slides = [
     {
@@ -218,6 +220,18 @@ export default function GoogleLogin({ onLogin, userEmail = "akaezechielwinner@gm
     onLogin(demoUser);
   };
 
+  const handleCustomEmailSignIn = () => {
+    const trimmedEmail = customEmail.trim();
+    if (!trimmedEmail) return;
+    const computedName = customName.trim() || trimmedEmail.split('@')[0].split('.').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    const user: UserProfile = {
+      email: trimmedEmail,
+      name: computedName,
+      picture: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=faces"
+    };
+    onLogin(user);
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors duration-500">
       <div className="absolute inset-0 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:16px_16px] opacity-40 -z-10"></div>
@@ -381,18 +395,81 @@ export default function GoogleLogin({ onLogin, userEmail = "akaezechielwinner@gm
 
               <div className="relative flex py-2 items-center">
                 <div className="flex-grow border-t border-slate-200"></div>
-                <span className="flex-shrink mx-4 text-slate-400 text-[10px] font-semibold uppercase tracking-wider">ou</span>
+                <span className="flex-shrink mx-4 text-slate-400 text-[10px] font-semibold uppercase tracking-wider">ou s'inscrire par e-mail</span>
                 <div className="flex-grow border-t border-slate-200"></div>
               </div>
 
-              {/* Demo Mode Bypass (Extremely robust fallback) */}
-              <button
-                onClick={handleDemoSignIn}
-                className="w-full flex items-center justify-center space-x-2 bg-slate-100 hover:bg-slate-200/80 text-slate-600 font-semibold py-2.5 px-4 rounded-xl text-xs transition-all cursor-pointer"
-              >
-                <Sparkles className="w-4 h-4 text-indigo-500" />
-                <span>Accéder directement en mode démonstration</span>
-              </button>
+              {/* Custom Email Selection and Sign-In Form */}
+              <div className="bg-slate-50/70 p-4.5 rounded-2xl border border-slate-200/60 text-left space-y-4">
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">
+                      1. Saisissez votre adresse e-mail
+                    </label>
+                    <input
+                      type="email"
+                      value={customEmail}
+                      onChange={(e) => setCustomEmail(e.target.value)}
+                      placeholder="votre.email@exemple.com"
+                      className="w-full px-3 py-2 text-xs bg-white text-slate-800 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none font-medium placeholder:text-slate-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">
+                      2. Nom complet <span className="text-slate-400 font-normal">(Optionnel)</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={customName}
+                      onChange={(e) => setCustomName(e.target.value)}
+                      placeholder="Ex: Ezechiel Winner"
+                      className="w-full px-3 py-2 text-xs bg-white text-slate-800 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none font-medium placeholder:text-slate-400"
+                    />
+                  </div>
+                </div>
+
+                {/* Suggestions Pills */}
+                <div className="space-y-1.5">
+                  <span className="block text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">
+                    Profils suggérés :
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      { email: 'akaezechielwinner@gmail.com', name: 'Aka Ezechiel Winner' },
+                      { email: 'contact@event-spend.com', name: 'EventSpend Admin' },
+                      { email: 'invite@winner-event.com', name: 'Invité d\'Honneur' }
+                    ].map((item) => (
+                      <button
+                        key={item.email}
+                        type="button"
+                        onClick={() => {
+                          setCustomEmail(item.email);
+                          setCustomName(item.name);
+                        }}
+                        className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border transition-all duration-200 cursor-pointer ${
+                          customEmail === item.email
+                            ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                            : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-800'
+                        }`}
+                      >
+                        {item.email.split('@')[0]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Submit action button */}
+                <button
+                  type="button"
+                  onClick={handleCustomEmailSignIn}
+                  disabled={!customEmail.trim() || !customEmail.includes('@')}
+                  className="w-full flex items-center justify-center space-x-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-all shadow-md shadow-indigo-100 hover:shadow-indigo-200/50 cursor-pointer"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-white" />
+                  <span>Se connecter avec cet e-mail</span>
+                </button>
+              </div>
 
               <div className="text-[10px] text-slate-400">
                 En vous connectant, vous acceptez nos CGU de simulation budgétaire.
