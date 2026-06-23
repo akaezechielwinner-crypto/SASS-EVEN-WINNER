@@ -1,0 +1,6 @@
+{
+  "name": "Calculateur de Budget Évènementiel",
+  "description": "Un SaaS moderne pour calculer et gérer vos budgets évènementiels, avec planification automatique par IA et gestion détaillée par catégorie.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
