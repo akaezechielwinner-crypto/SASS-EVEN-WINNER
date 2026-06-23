@@ -18,6 +18,7 @@ export default function GoogleLogin({ onLogin, userEmail = "akaezechielwinner@gm
   const [introSlide, setIntroSlide] = useState<number>(0);
   const [step, setStep] = useState<'welcome' | 'loading'>('welcome');
   const [authError, setAuthError] = useState<string>('');
+  const [isUnauthorizedDomainError, setIsUnauthorizedDomainError] = useState<boolean>(false);
   const [customEmail, setCustomEmail] = useState<string>(userEmail);
   const [customName, setCustomName] = useState<string>('');
 
@@ -179,6 +180,7 @@ export default function GoogleLogin({ onLogin, userEmail = "akaezechielwinner@gm
   const handleStartGoogleSignIn = async () => {
     setStep('loading');
     setAuthError('');
+    setIsUnauthorizedDomainError(false);
     try {
       const result = await googleSignIn();
       if (result) {
@@ -195,7 +197,14 @@ export default function GoogleLogin({ onLogin, userEmail = "akaezechielwinner@gm
       console.error("Sign-In Error:", err);
       let errMsg = "Échec de l'authentification avec Google.";
       
-      if (err.code === 'auth/popup-blocked') {
+      const isDomainError = err.code === 'auth/unauthorized-domain' || 
+                            (err.message && err.message.includes('auth/unauthorized-domain')) ||
+                            (err.message && err.message.includes('domain is not authorized'));
+
+      if (isDomainError) {
+        setIsUnauthorizedDomainError(true);
+        errMsg = `Domaine non autorisé (auth/unauthorized-domain). L'adresse de ce site (${window.location.hostname}) n'est pas enregistrée dans la console Firebase de votre application.`;
+      } else if (err.code === 'auth/popup-blocked') {
         errMsg = "Le bloqueur de fenêtres de votre navigateur a bloqué la popup de connexion Google. Veuillez l'autoriser ou utiliser le mode d'accès direct ci-dessous.";
       } else if (err.code === 'auth/cancelled-popup-request') {
         errMsg = "La tentative de connexion a été annulée.";
@@ -354,15 +363,46 @@ export default function GoogleLogin({ onLogin, userEmail = "akaezechielwinner@gm
                 <motion.div 
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="p-3.5 bg-red-50 rounded-xl border border-red-100 text-left space-y-1.5"
+                  className="p-3.5 bg-red-50 rounded-xl border border-red-100 text-left space-y-1.5 shadow-sm"
                 >
                   <div className="flex items-center space-x-2 text-red-800 font-bold text-xs">
                     <AlertCircle className="w-4 h-4 flex-shrink-0" />
                     <span>Erreur de Connexion</span>
                   </div>
-                  <p className="text-[11px] text-red-700 leading-relaxed">
+                  <p className="text-[11px] text-red-700 leading-relaxed font-medium">
                     {authError}
                   </p>
+                  
+                  {isUnauthorizedDomainError && (
+                    <div className="mt-3 pt-3 border-t border-red-200/50 space-y-2">
+                      <p className="text-[10px] font-extrabold text-red-800 uppercase tracking-wider flex items-center gap-1">
+                        <Info className="w-3.5 h-3.5 text-red-700" />
+                        <span>Comment résoudre cela en 1 minute :</span>
+                      </p>
+                      <ol className="list-decimal list-inside text-[11px] text-red-700/95 space-y-1.5 pl-0.5 leading-relaxed">
+                        <li>
+                          Allez sur votre <a href="https://console.firebase.google.com/" target="_blank" rel="noopener noreferrer" className="underline font-bold text-indigo-700 hover:text-indigo-900">Console Firebase</a>.
+                        </li>
+                        <li>
+                          Accédez à <strong className="font-bold text-red-900">Authentication</strong> &gt; onglet <strong className="font-bold text-red-900">Paramètres</strong>.
+                        </li>
+                        <li>
+                          Trouvez la section <strong className="font-bold text-red-900">Domaines autorisés</strong> et cliquez sur <strong className="font-bold text-red-900">Ajouter un domaine</strong>.
+                        </li>
+                        <li>
+                          Copiez-collez l'adresse exacte ci-dessous :
+                          <div className="mt-1 flex items-center gap-1.5">
+                            <code className="bg-red-100/80 px-2 py-1 rounded font-mono text-[10px] font-bold select-all break-all border border-red-200/60 text-red-950 flex-grow">
+                              {window.location.hostname}
+                            </code>
+                          </div>
+                        </li>
+                      </ol>
+                      <div className="text-[10px] text-slate-600 bg-white/70 p-2 rounded-lg border border-red-100/50 leading-relaxed mt-2.5">
+                        <strong>💡 Raccourci rapide :</strong> Si vous ne souhaitez pas modifier les réglages Firebase, vous pouvez simplement saisir votre adresse e-mail dans la section <strong>"s'inscrire par e-mail"</strong> juste ci-dessous pour un accès instantané et complet !
+                      </div>
+                    </div>
+                  )}
                 </motion.div>
               )}
 
