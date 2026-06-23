@@ -22,6 +22,8 @@ import OverviewTab from './components/OverviewTab';
 import CategoriesTab from './components/CategoriesTab';
 import ExpensesTab from './components/ExpensesTab';
 import AiPlannerTab from './components/AiPlannerTab';
+import { initAuth, logout as googleLogout } from './lib/googleAuth';
+import { safeLocalStorage } from './lib/safeStorage';
 
 const LOCAL_STORAGE_KEY_SESSION = 'event_spend_user_session';
 const LOCAL_STORAGE_KEY_EVENT = 'event_spend_active_event_data';
@@ -39,13 +41,36 @@ const INITIAL_EXPENSES: ExpenseItem[] = [
 export default function App() {
   // Session User state
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
-    const raw = localStorage.getItem(LOCAL_STORAGE_KEY_SESSION);
+    const raw = safeLocalStorage.getItem(LOCAL_STORAGE_KEY_SESSION);
     return raw ? JSON.parse(raw) : null;
   });
 
+  // Listen to Google Firebase Auth state changes to keep sessions active and synced
+  useEffect(() => {
+    const unsubscribe = initAuth(
+      (user, token) => {
+        const loggedUser: UserProfile = {
+          email: user.email || '',
+          name: user.displayName || user.email?.split('@')[0] || 'Utilisateur Google',
+          picture: user.photoURL || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=faces'
+        };
+        setCurrentUser(loggedUser);
+        safeLocalStorage.setItem(LOCAL_STORAGE_KEY_SESSION, JSON.stringify(loggedUser));
+      },
+      () => {
+        // Safe: if auth token fails or expires, we only logout if we don't have local storage session
+      }
+    );
+    return () => {
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
+  }, []);
+
   // Event Budget planner state
   const [eventData, setEventData] = useState<EventDetails>(() => {
-    const raw = localStorage.getItem(LOCAL_STORAGE_KEY_EVENT);
+    const raw = safeLocalStorage.getItem(LOCAL_STORAGE_KEY_EVENT);
     if (raw) {
       return JSON.parse(raw);
     }
@@ -62,19 +87,24 @@ export default function App() {
 
   // Trigger LocalStorage save whenever eventData changes
   useEffect(() => {
-    localStorage.setItem(LOCAL_STORAGE_KEY_EVENT, JSON.stringify(eventData));
+    safeLocalStorage.setItem(LOCAL_STORAGE_KEY_EVENT, JSON.stringify(eventData));
   }, [eventData]);
 
   // Handle Login
   const handleLogin = (user: UserProfile) => {
     setCurrentUser(user);
-    localStorage.setItem(LOCAL_STORAGE_KEY_SESSION, JSON.stringify(user));
+    safeLocalStorage.setItem(LOCAL_STORAGE_KEY_SESSION, JSON.stringify(user));
   };
 
   // Handle Logout
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setCurrentUser(null);
-    localStorage.removeItem(LOCAL_STORAGE_KEY_SESSION);
+    safeLocalStorage.removeItem(LOCAL_STORAGE_KEY_SESSION);
+    try {
+      await googleLogout();
+    } catch (err) {
+      console.error("Error signing out from Google Firebase:", err);
+    }
   };
 
   // Callback: Budget Input Global Change
@@ -135,7 +165,7 @@ export default function App() {
             <Coins className="w-5 h-5" />
           </div>
           <div>
-            <span className="font-extrabold text-lg tracking-tight text-slate-800 font-display">EventCalc</span>
+            <span className="font-extrabold text-lg tracking-tight text-slate-800 font-display">Winner Event</span>
             <span className="text-[9px] font-bold text-indigo-600 uppercase tracking-widest block -mt-1">SaaS Budget</span>
           </div>
         </div>
@@ -343,10 +373,10 @@ export default function App() {
         <div className="px-6 py-2 bg-white border-t border-slate-200 flex items-center justify-between text-[10px] text-slate-400 shrink-0">
           <p className="flex items-center space-x-1.5 font-bold text-slate-500">
             <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse inline-block" />
-            <span>Tableau de bord sécurisé EventCalc</span>
+            <span>Tableau de bord sécurisé Winner Event</span>
           </p>
           <div className="flex items-center space-x-2">
-            <span>Données cryptées localStorage</span>
+            <span>Stockage local sécurisé</span>
           </div>
         </div>
       </main>

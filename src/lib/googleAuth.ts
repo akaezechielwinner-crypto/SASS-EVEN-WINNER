@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, User } from 'firebase/auth';
+import { safeSessionStorage } from './safeStorage';
 
 // Load the firebase configuration that matches the Applet
 import firebaseConfig from '../../firebase-applet-config.json';
@@ -23,7 +24,7 @@ export const initAuth = (
   onAuthFailure?: () => void
 ) => {
   // Restore token from session/memory if possible or wait for onAuthStateChanged
-  const storedToken = sessionStorage.getItem('g_access_token');
+  const storedToken = safeSessionStorage.getItem('g_access_token');
   if (storedToken) {
     cachedAccessToken = storedToken;
   }
@@ -38,7 +39,7 @@ export const initAuth = (
       }
     } else {
       cachedAccessToken = null;
-      sessionStorage.removeItem('g_access_token');
+      safeSessionStorage.removeItem('g_access_token');
       if (onAuthFailure) onAuthFailure();
     }
   });
@@ -55,7 +56,7 @@ export const googleSignIn = async (): Promise<{ user: User; accessToken: string 
     }
 
     cachedAccessToken = credential.accessToken;
-    sessionStorage.setItem('g_access_token', cachedAccessToken);
+    safeSessionStorage.setItem('g_access_token', cachedAccessToken);
     return { user: result.user, accessToken: cachedAccessToken };
   } catch (error: any) {
     console.error('Google Sign-In Error:', error);
@@ -67,11 +68,11 @@ export const googleSignIn = async (): Promise<{ user: User; accessToken: string 
 
 export const getAccessToken = (): string | null => {
   if (cachedAccessToken) return cachedAccessToken;
-  return sessionStorage.getItem('g_access_token');
+  return safeSessionStorage.getItem('g_access_token');
 };
 
 export const logout = async () => {
   await auth.signOut();
   cachedAccessToken = null;
-  sessionStorage.removeItem('g_access_token');
+  safeSessionStorage.removeItem('g_access_token');
 };

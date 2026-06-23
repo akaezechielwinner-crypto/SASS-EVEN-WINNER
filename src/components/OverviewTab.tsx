@@ -1,8 +1,9 @@
 import React from 'react';
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
-import { DollarSign, Wallet, CheckCircle, AlertTriangle, ArrowUpRight, TrendingUp } from 'lucide-react';
+import { DollarSign, Wallet, CheckCircle, AlertTriangle, ArrowUpRight, TrendingUp, FileDown } from 'lucide-react';
 import { EventDetails, Category } from '../types';
 import GoogleSheetsSync from './GoogleSheetsSync';
+import { generateEventPDF } from '../lib/pdfGenerator';
 
 interface OverviewTabProps {
   event: EventDetails;
@@ -57,6 +58,24 @@ export default function OverviewTab({ event, onBudgetChange, onImportBudget }: O
 
   return (
     <div className="space-y-6 font-sans">
+      {/* Top Header section with Action Button */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+        <div>
+          <h2 className="text-base font-extrabold text-slate-800 tracking-tight">Tableau de Bord Financier</h2>
+          <p className="text-xs text-slate-400">Suivi en temps réel des allocations, dépenses et prévisions budgétaires.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            id="btn-download-pdf"
+            onClick={() => generateEventPDF(event)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow-sm shadow-indigo-100 hover:shadow transition-all duration-200 cursor-pointer"
+          >
+            <FileDown className="w-4 h-4 shrink-0" />
+            <span>Télécharger le Rapport PDF</span>
+          </button>
+        </div>
+      </div>
+
       {/* Target input top-card */}
       <div className="bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
         <div className="absolute right-0 bottom-0 top-0 w-1/3 opacity-10 pointer-events-none">
