@@ -19,6 +19,7 @@ export default function GoogleLogin({ onLogin, userEmail = "akaezechielwinner@gm
   const [step, setStep] = useState<'welcome' | 'loading'>('welcome');
   const [authError, setAuthError] = useState<string>('');
   const [isUnauthorizedDomainError, setIsUnauthorizedDomainError] = useState<boolean>(false);
+  const [showTroubleshooting, setShowTroubleshooting] = useState<boolean>(false);
   const [customEmail, setCustomEmail] = useState<string>(userEmail);
   const [customName, setCustomName] = useState<string>('');
 
@@ -242,10 +243,10 @@ export default function GoogleLogin({ onLogin, userEmail = "akaezechielwinner@gm
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors duration-500">
+    <div className="min-h-screen flex flex-col justify-center items-center bg-slate-50 py-6 sm:py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors duration-500 overflow-y-auto">
       <div className="absolute inset-0 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:16px_16px] opacity-40 -z-10"></div>
       
-      <div className="max-w-md w-full space-y-6 bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-slate-100 overflow-y-auto max-h-[92vh] scrollbar-thin scrollbar-thumb-slate-200">
+      <div className="max-w-md w-full my-auto space-y-6 bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-slate-100">
         <AnimatePresence mode="wait">
           {showIntro ? (
             <motion.div
@@ -375,31 +376,44 @@ export default function GoogleLogin({ onLogin, userEmail = "akaezechielwinner@gm
                   
                   {isUnauthorizedDomainError && (
                     <div className="mt-3 pt-3 border-t border-red-200/50 space-y-2">
-                      <p className="text-[10px] font-extrabold text-red-800 uppercase tracking-wider flex items-center gap-1">
-                        <Info className="w-3.5 h-3.5 text-red-700" />
-                        <span>Comment résoudre cela en 1 minute :</span>
-                      </p>
-                      <ol className="list-decimal list-inside text-[11px] text-red-700/95 space-y-1.5 pl-0.5 leading-relaxed">
-                        <li>
-                          Allez sur votre <a href="https://console.firebase.google.com/" target="_blank" rel="noopener noreferrer" className="underline font-bold text-indigo-700 hover:text-indigo-900">Console Firebase</a>.
-                        </li>
-                        <li>
-                          Accédez à <strong className="font-bold text-red-900">Authentication</strong> &gt; onglet <strong className="font-bold text-red-900">Paramètres</strong>.
-                        </li>
-                        <li>
-                          Trouvez la section <strong className="font-bold text-red-900">Domaines autorisés</strong> et cliquez sur <strong className="font-bold text-red-900">Ajouter un domaine</strong>.
-                        </li>
-                        <li>
-                          Copiez-collez l'adresse exacte ci-dessous :
-                          <div className="mt-1 flex items-center gap-1.5">
-                            <code className="bg-red-100/80 px-2 py-1 rounded font-mono text-[10px] font-bold select-all break-all border border-red-200/60 text-red-950 flex-grow">
-                              {window.location.hostname}
-                            </code>
-                          </div>
-                        </li>
-                      </ol>
-                      <div className="text-[10px] text-slate-600 bg-white/70 p-2 rounded-lg border border-red-100/50 leading-relaxed mt-2.5">
-                        <strong>💡 Raccourci rapide :</strong> Si vous ne souhaitez pas modifier les réglages Firebase, vous pouvez simplement saisir votre adresse e-mail dans la section <strong>"s'inscrire par e-mail"</strong> juste ci-dessous pour un accès instantané et complet !
+                      <button
+                        type="button"
+                        onClick={() => setShowTroubleshooting(!showTroubleshooting)}
+                        className="w-full flex items-center justify-between text-[10px] font-extrabold text-red-800 uppercase tracking-wider hover:text-red-950 transition-colors cursor-pointer"
+                      >
+                        <span className="flex items-center gap-1">
+                          <Info className="w-3.5 h-3.5 text-red-700 shrink-0" />
+                          <span>Résoudre l'erreur Firebase</span>
+                        </span>
+                        <span className="text-[9px] bg-red-100 px-1.5 py-0.5 rounded font-bold">{showTroubleshooting ? '▲ Masquer' : '▼ Détails (1 min)'}</span>
+                      </button>
+
+                      {showTroubleshooting && (
+                        <div className="space-y-2 pt-1">
+                          <ol className="list-decimal list-inside text-[11px] text-red-700/95 space-y-1.5 pl-0.5 leading-relaxed">
+                            <li>
+                              Allez sur votre <a href="https://console.firebase.google.com/" target="_blank" rel="noopener noreferrer" className="underline font-bold text-indigo-700 hover:text-indigo-900">Console Firebase</a>.
+                            </li>
+                            <li>
+                              Accédez à <strong className="font-bold text-red-900">Authentication</strong> &gt; <strong className="font-bold text-red-900">Paramètres</strong>.
+                            </li>
+                            <li>
+                              Dans <strong className="font-bold text-red-900">Domaines autorisés</strong>, cliquez sur <strong className="font-bold text-red-900">Ajouter un domaine</strong>.
+                            </li>
+                            <li>
+                              Ajoutez le domaine suivant :
+                              <div className="mt-1 flex items-center gap-1.5">
+                                <code className="bg-red-100/80 px-2 py-1 rounded font-mono text-[10px] font-bold select-all break-all border border-red-200/60 text-red-950 flex-grow">
+                                  {window.location.hostname}
+                                </code>
+                              </div>
+                            </li>
+                          </ol>
+                        </div>
+                      )}
+                      
+                      <div className="text-[10px] text-slate-600 bg-white/70 p-2 rounded-lg border border-red-100/50 leading-relaxed mt-2">
+                        <strong>💡 Accès Instantané :</strong> Saisissez simplement votre e-mail ci-dessous et cliquez sur <strong>"Se connecter"</strong> pour utiliser l'application tout de suite !
                       </div>
                     </div>
                   )}
